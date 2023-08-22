@@ -1,7 +1,8 @@
 /* In this doc we can find all the CRUD login of our application.
  This is called by the Pokemon controller file  and execute an specific action. */
 
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, 
+        InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { v4 as uuid } from 'uuid'
@@ -31,13 +32,9 @@ export class PokemonService {
         message: 'This action adds a new pokemon',
         pokemon
       };
-    } catch (error) {
-      if ( error.code === 11000 ) {
-        throw new BadRequestException(`Pokemono exists in DB ${ JSON.stringify( error.keyValue ) }`);
-      }
-      console.log(error);
-      throw new InternalServerErrorException(`Can't create Pokemon. - Check server logs`);
 
+    } catch (error) {
+      this.handleErrors( error );
     }
   }
 
@@ -75,12 +72,34 @@ export class PokemonService {
   }
 
   // Update a Pokemon
-  update(id: number, updatePokemonDto: UpdatePokemonDto) {
-    return `This action updates a #${id} pokemon`;
+  async update(term: string, updatePokemonDto: UpdatePokemonDto) {
+    const pokemon = await this.findOne(term);
+    
+    if( updatePokemonDto.name  )
+    updatePokemonDto.name = updatePokemonDto.name.toLowerCase();
+    
+    try {
+      await pokemon.updateOne( updatePokemonDto );
+      
+      return { ...pokemon.toJSON(), ...updatePokemonDto };
+    
+    } catch (error) {
+      this.handleErrors( error );
+    } 
+    
   }
 
   // Delete Pokemon changing its status
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} pokemon`;
+  }
+
+  // function to handle the common errors
+  private handleErrors( error ) {
+    if ( error.code === 11000 ) {
+      throw new BadRequestException(`Pokemon exists in DB ${ JSON.stringify( error.keyValue ) }`);
+    }
+    console.log(error);
+    throw new InternalServerErrorException(`Can't create Pokemon. - Check server logs`);
   }
 }

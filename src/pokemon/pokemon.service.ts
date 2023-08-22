@@ -39,8 +39,9 @@ export class PokemonService {
   }
 
   // Get all Pokemos
-  findAll() {
-    return `This action returns all pokemon`;
+  async findAll() {
+    const pokemons = await this.pokemonModel.find()
+    return pokemons;
   }
 
   //Get Pokemon by id - name or N°
@@ -90,8 +91,18 @@ export class PokemonService {
   }
 
   // Delete Pokemon changing its status
-  remove(id: string) {
-    return `This action removes a #${id} pokemon`;
+  async remove(id: string) {
+    const pokemon = await this.findOne( id );
+    // (await pokemon).deleteOne(); Delete the pokemon from db
+    try {
+      // this code line update the status pokemon.
+      await pokemon.updateOne({ status: false })
+
+    } catch (error) {
+      this.handleErrors( error );
+    }
+
+    return { id };
   }
 
   // function to handle the common errors
@@ -99,6 +110,7 @@ export class PokemonService {
     if ( error.code === 11000 ) {
       throw new BadRequestException(`Pokemon exists in DB ${ JSON.stringify( error.keyValue ) }`);
     }
+    
     console.log(error);
     throw new InternalServerErrorException(`Can't create Pokemon. - Check server logs`);
   }

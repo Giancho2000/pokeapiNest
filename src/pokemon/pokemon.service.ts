@@ -92,7 +92,7 @@ export class PokemonService {
 
   // Delete Pokemon changing its status
   async remove(id: string) {
-    const pokemon = await this.findOne( id );
+    //const pokemon = await this.findOne( id );
     // (await pokemon).deleteOne(); Delete the pokemon from db
     /* try {
       // this code line update the status pokemon.
@@ -101,11 +101,15 @@ export class PokemonService {
     } catch (error) {
       this.handleErrors( error );
     } 
-    return { id };*/
-
-    const result = this.pokemonModel.findByIdAndDelete( id );
+    return { id };
+    const result = await this.pokemonModel.findByIdAndDelete( id );
+    */
     
-    return result;
+    const { deletedCount } = await this.pokemonModel.deleteOne( { _id: id });
+    if (deletedCount === 0) {
+      throw new BadRequestException(`Pokemon with id "${ id }" not found`);
+    }
+    return ;
   }
 
   // function to handle the common errors

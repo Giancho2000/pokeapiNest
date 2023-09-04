@@ -2,7 +2,7 @@
  This is called by the Pokemon controller file  and execute an specific action. */
 
 import { BadRequestException, Injectable, 
-        InternalServerErrorException, NotFoundException } from '@nestjs/common';
+        InternalServerErrorException, NotFoundException, Query } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { v4 as uuid } from 'uuid'
@@ -11,6 +11,7 @@ import { Model, isValidObjectId } from 'mongoose';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { Pokemon } from './entities/pokemon.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class PokemonService {
@@ -39,9 +40,17 @@ export class PokemonService {
   }
 
   // Get all Pokemos
-  async findAll() {
-    const pokemons = await this.pokemonModel.find()
-    return pokemons;
+  findAll(paginationDto: PaginationDto) {
+    const {limit = 10, offSet = 0} = paginationDto
+    
+    return this.pokemonModel.find()
+    .limit( limit )
+    .skip( offSet )
+    .sort({
+      no: 1
+    })
+    .select('-__v -status');
+    //return pokemons;
   }
 
   //Get Pokemon by id - name or N°
